@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Files</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen font-['Inter'] text-white">
+    <div class="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
+        <!-- Main Container -->
+        <div class="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl p-6 md:p-8 space-y-8 border border-white/10">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-white/10 pb-6">
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <!-- Icon container - smaller on mobile -->
+                    <div class="p-2 sm:p-3 bg-purple-500/20 rounded-xl sm:rounded-2xl">
+                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-purple-400" xmlns="http://www.w3.org/2000/svg"
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                    </div>
+                    <!-- Text container -->
+                    <div>
+                        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight">Download Files</h1>
+                        <p class="text-purple-300 text-xs sm:text-sm">Total Files: <%= totalFiles %>
+                        </p>
+                    </div>
+                </div>
+
+
+                <!-- Time Remaining Badge -->
+                <div class="flex items-center space-x-2 min-w-0">
+                    <div
+                        class="inline-flex items-center min-w-0 bg-purple-500/20 px-2 sm:px-4 py-1.5 sm:py-2 rounded-full border border-purple-400/30">
+                        <!-- Clock Icon - Smaller on mobile -->
+                        <svg class="flex-shrink-0 w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400 mr-1.5 sm:mr-2" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <!-- Time Text - Smaller on mobile -->
+                        <span class="truncate text-purple-200 text-xs sm:text-sm font-medium">
+                            <%= timeRemaining %>
+                        </span>
+                    </div>
+                </div>
+
+
+            </div>
+
+            <% if (files.length===1) { %>
+                <div class="space-y-6 max-w-4xl mx-auto">
+                    <!-- Preview Section with enhanced styling -->
+                    <% if (files[0].isPreviewable) { %>
+                        <div class="relative group">
+                            <div class="aspect-video rounded-xl overflow-hidden bg-black/30 border border-white/10 backdrop-blur-sm transition-all duration-300 group-hover:border-purple-500/30 group-hover:shadow-lg group-hover:shadow-purple-500/10">
+                                <% if (files[0].mimeType.startsWith('image/')) { %>
+                                    <img src="/preview/<%= groupId %>/<%= files[0].filename %>"
+                                        class="w-full h-full object-contain transition-transform duration-300 group-hover:scale-[1.02]" 
+                                        alt="Preview of <%= files[0].originalName %>">
+                                <% } else if (files[0].mimeType.startsWith('video/')) { %>
+                                    <video controls class="w-full h-full">
+                                        <source src="/preview/<%= groupId %>/<%= files[0].filename %>"
+                                            type="<%= files[0].mimeType %>">
+                                        <p class="text-center text-purple-300 py-4">Your browser does not support video playback.</p>
+                                    </video>
+                                <% } %>
+                                
+                                <!-- Fullscreen button for images -->
+                                <% if (files[0].mimeType.startsWith('image/')) { %>
+                                    <button onclick="openFullscreen(this)" 
+                                        class="absolute top-4 right-4 p-2 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/70">
+                                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                        </svg>
+                                    </button>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% } %>
+                
+                    <!-- File Details Card -->
+                    <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden backdrop-blur-sm hover:border-purple-500/30 transition-all duration-300">
+                        <!-- File Header -->
+                        <div class="p-6 border-b border-white/10">
+                            <div class="flex items-center space-x-4">
+                                <!-- File Type Icon -->
+                                <div class="p-3 bg-purple-500/20 rounded-xl">
+                                    <svg class="w-8 h-8 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h1 class="text-xl font-semibold text-white truncate" title="<%= files[0].originalName %>">
+                                        <%= files[0].originalName %>
+                                    </h1>
+                                    <p class="text-purple-300 text-sm"><%= files[0].mimeType %></p>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- File Stats Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6">
+                            <div class="space-y-2">
+                                <p class="text-purple-300 text-sm flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                                    </svg>
+                                    Size
+                                </p>
+                                <p class="font-medium text-white"><%= files[0].readableSize %></p>
+                            </div>
+                            <div class="space-y-2">
+                                <p class="text-purple-300 text-sm flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Upload Date
+                                </p>
+                                <p class="font-medium text-white"><%= new Date(files[0].uploadDate).toLocaleString() %></p>
+                            </div>
+                            <div class="space-y-2">
+                                <p class="text-purple-300 text-sm flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                    Downloads
+                                </p>
+                                <p class="font-medium text-white"><%= files[0].downloads %></p>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Download Button -->
+                    <a href="/download/<%= groupId %>/<%= files[0].filename %>"
+                        class="group relative flex items-center justify-center w-full bg-gradient-to-r from-purple-600 to-purple-700 py-4 px-6 rounded-xl transition-all duration-300 
+                        hover:from-purple-700 hover:to-purple-800 
+                        focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900
+                        shadow-lg shadow-purple-500/20 border border-purple-500/30 
+                        transform hover:-translate-y-0.5 active:translate-y-0">
+                        
+                        <svg class="w-5 h-5 mr-2 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        <span class="font-medium text-white">Download File</span>
+                        
+                        <!-- Shine effect -->
+                        <div class="absolute inset-0 rounded-xl overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                        </div>
+                    </a>
+                </div>
+                
+                <script>
+                function openFullscreen(button) {
+                    const img = button.parentElement.querySelector('img');
+                    if (img.requestFullscreen) {
+                        img.requestFullscreen();
+                    } else if (img.webkitRequestFullscreen) {
+                        img.webkitRequestFullscreen();
+                    }
+                }
+                </script>
+                
+                <% } else { %>
+                    <!-- Multiple Files View -->
+                    <!-- Download All Button -->
+                    <a href="/download-all/<%= groupId %>"
+                        class="block w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium py-4 px-6 rounded-xl text-center transition-all duration-300 shadow-lg shadow-purple-500/20 border border-purple-500/30">
+                        <div class="flex items-center justify-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span>Download All Files (ZIP)</span>
+                        </div>
+                    </a>
+
+                    <!-- File List -->
+                    <div class="space-y-3">
+                        <% files.forEach(file=> { %>
+                            <div
+                                class="group hover:bg-purple-500/10 transition-all duration-300 bg-white/5 p-4 rounded-xl backdrop-blur-sm border border-white/10 flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <!-- File Icon -->
+                                    <div class="p-2 bg-white/10 rounded-lg">
+                                        <%- getFileIcon(file.mimeType, file.originalName) %>
+                                    </div>
+
+                                    <div
+                                        class="flex flex-col space-y-1 min-w-0 max-w-[150px] sm:max-w-[200px] md:max-w-[300px] lg:max-w-[400px]">
+                                        <!-- File name with controlled truncation -->
+                                        <span class="text-white font-medium truncate text-sm sm:text-base"
+                                            title="<%= file.originalName %>">
+                                            <%= file.originalName %>
+                                        </span>
+
+                                        <!-- File size -->
+                                        <span class="text-purple-300 text-xs">
+                                            <%= file.readableSize %>
+                                        </span>
+                                    </div>
+
+
+                                </div>
+
+                                <div class="flex items-center space-x-2 sm:space-x-3">
+                                    <% if (file.isPreviewable) { %>
+                                        <!-- Preview Button -->
+                                        <button
+                                            onclick="showPreview('<%= groupId %>', '<%= file.filename %>', '<%= file.mimeType %>')"
+                                            class="inline-flex items-center bg-white/10 hover:bg-purple-500/20 text-white p-2 sm:px-4 sm:py-2 rounded-lg transition-colors duration-300 border border-white/10">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            <span
+                                                class="hidden sm:inline-block sm:ml-2 text-sm font-medium">Preview</span>
+                                        </button>
+                                        <% } %>
+
+                                            <!-- Download Button -->
+                                            <a href="/download/<%= groupId %>/<%= file.filename %>"
+                                                class="inline-flex items-center bg-white/10 hover:bg-purple-500/20 text-white p-2 sm:px-4 sm:py-2 rounded-lg transition-colors duration-300 border border-white/10">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                                    stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                </svg>
+                                                <span
+                                                    class="hidden sm:inline-block sm:ml-2 text-sm font-medium">Download</span>
+                                            </a>
+                                </div>
+
+                            </div>
+                            <% }); %>
+                    </div>
+
+                    <% } %>
+
+                        <a href="/" class="group relative flex items-center justify-center w-full bg-white/5 text-gray-200 font-medium py-4 px-6 rounded-xl transition-all duration-300 
+                    hover:bg-white/10 hover:shadow-lg hover:shadow-white/5 hover:-translate-y-0.5 
+                    active:translate-y-0 
+                    focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:ring-offset-2 focus:ring-offset-gray-900
+                    border border-white/10 hover:border-white/20">
+
+                            <!-- Left Arrow with Animation -->
+                            <svg class="w-5 h-5 mr-2 transform transition-transform group-hover:-translate-x-1"
+                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+
+                            <!-- Button Text -->
+                            <span class="relative">Back to Upload</span>
+
+                            <!-- Hover Effect Overlay -->
+                            <div class="absolute inset-0 rounded-xl overflow-hidden">
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000">
+                                </div>
+                            </div>
+                        </a>
+
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-black/80 hidden backdrop-blur-sm">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-gray-900 rounded-2xl max-w-4xl w-full p-4 relative">
+                <button onclick="closePreview()" class="absolute top-4 right-4 text-white/60 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <div id="previewContent" class="aspect-video rounded-xl overflow-hidden bg-black/30">
+                    <!-- Preview content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPreview(groupId, filename, mimeType) {
+            const modal = document.getElementById('previewModal');
+            const content = document.getElementById('previewContent');
+
+            if (mimeType.startsWith('image/')) {
+                content.innerHTML = `<img src="/preview/${groupId}/${filename}" class="w-full h-full object-contain">`;
+            } else if (mimeType.startsWith('video/')) {
+                content.innerHTML = `
+                    <video controls class="w-full h-full">
+                        <source src="/preview/${groupId}/${filename}" type="${mimeType}">
+                        Your browser does not support video playback.
+                    </video>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closePreview() {
+            const modal = document.getElementById('previewModal');
+            const content = document.getElementById('previewContent');
+            content.innerHTML = '';
+            modal.classList.add('hidden');
+        }
+    </script>
+</body>
+
+</html>

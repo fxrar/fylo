@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - File Sharing App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body
+    class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen font-['Inter'] flex items-center justify-center p-4">
+    <div class="max-w-md w-full">
+        <!-- Error Container with Glass Morphism -->
+        <div
+            class="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl p-8 space-y-6 border border-white/10 transform transition-all duration-300 hover:border-red-500/30">
+            <!-- Error Icon -->
+            <div class="relative">
+                <div class="flex justify-center">
+                    <div class="p-3 bg-red-500/20 rounded-2xl">
+                        <svg class="w-12 h-12 text-red-400 "
+                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                </div>
+                
+            </div>
+
+            <!-- Error Message -->
+            <div class="text-center space-y-2">
+                <h1 class="text-2xl font-bold text-white">Oops! Something went wrong</h1>
+                <p class="text-red-300 text-sm">
+                    <%= message %>
+                </p>
+            </div>
+
+            <!-- Return Home Button -->
+            <a href="/" class="group relative flex items-center justify-center w-full bg-gradient-to-r from-purple-600 to-purple-700 py-3 px-6 rounded-xl transition-all duration-300 
+                hover:from-purple-700 hover:to-purple-800 
+                focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900
+                shadow-lg shadow-purple-500/20 border border-purple-500/30 
+                transform hover:-translate-y-0.5 active:translate-y-0">
+
+                <!-- Home Icon -->
+                <svg class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1"
+                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="white">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span class="text-white font-medium">Return Home</span>
+
+                <!-- Shine Effect -->
+                <div class="absolute inset-0 rounded-xl overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000">
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <style>
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-4px);
+            }
+
+            75% {
+                transform: translateX(4px);
+            }
+        }
+    </style>
+</body>
+
+</html>

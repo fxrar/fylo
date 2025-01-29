@@ -1,0 +1,23 @@
+{
+  "name": "file-sharing-app",
+  "version": "1.0.0",
+  "description": "Simple file sharing application",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "ejs": "^3.1.10",
+    "express": "^4.18.2",
+    "jszip": "^3.10.1",
+    "mongoose": "^7.0.0",
+    "multer": "^1.4.5-lts.1",
+    "node-schedule": "^2.1.1",
+    "uuid": "^11.0.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

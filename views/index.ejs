@@ -1,0 +1,695 @@
+<!-- views/index.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern File Sharing</title>
+    <!-- Google Fonts for Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes progress {
+            from {
+                width: 0;
+            }
+
+            to {
+                width: var(--progress);
+            }
+        }
+    </style>
+
+    <style>
+
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen font-['Inter']">
+    <div class="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
+        <!-- Glass-morphism inspired main container -->
+        <div class="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl p-6 md:p-8 space-y-8 border border-white/10">
+            <!-- Header with enhanced styling -->
+            <div class="flex items-center space-x-4 border-b border-white/10 pb-6">
+                <div class="p-3 bg-purple-500/20 rounded-2xl">
+                    <svg class="w-8 h-8 text-purple-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-white tracking-tight">Modern File Sharing</h1>
+                    <p class="text-purple-300 text-sm">Upload and share files securely</p>
+                </div>
+            </div>
+
+            <form class="space-y-6" id="uploadForm">
+                <div class="relative">
+                    <label for="file" class="block">
+                        <div id="dropZone"
+                            class="border-2 border-dashed border-white/20 hover:border-purple-400/50 rounded-xl p-8 text-center cursor-pointer transition-all duration-300 bg-white/5 backdrop-blur-sm group relative overflow-hidden">
+                            <!-- Background pulse animation on drag -->
+                            <div class="absolute inset-0 bg-purple-500/10 opacity-0 transition-opacity duration-300"
+                                id="dragOverlay"></div>
+
+                            <!-- Main content -->
+                            <div class="relative z-10 space-y-4">
+                                <!-- Upload icon with animation -->
+                                <div class="relative mx-auto w-16 h-16">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        class="w-full h-full text-purple-400/70 group-hover:text-purple-400 transition-all duration-300 transform group-hover:scale-110"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                                    </svg>
+                                </div>
+
+                                <!-- Upload text -->
+                                <div class="space-y-2">
+                                    <span
+                                        class="block text-base sm:text-lg font-medium text-gray-200 group-hover:text-white transition-colors duration-300">
+                                        Drop your files here or click to browse
+                                    </span>
+                                    <div
+                                        class="flex flex-col sm:flex-row items-center justify-center gap-2 text-xs text-purple-300/70">
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                            </svg>
+                                            Maximum file size: 10MB per file
+                                        </span>
+                                        <span class="hidden sm:inline">•</span>
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            Supports all file types
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+
+                    <input type="file" id="file" name="file" class="hidden" multiple accept="*/*">
+
+                    <!-- Selected files list with enhanced styling -->
+                    <ul id="selectedFiles" class="mt-4 space-y-2 max-h-60 overflow-y-auto custom-scrollbar"></ul>
+                </div>
+
+                <style>
+                    /* Custom scrollbar styling */
+                    .custom-scrollbar::-webkit-scrollbar {
+                        width: 6px;
+                    }
+
+                    .custom-scrollbar::-webkit-scrollbar-track {
+                        background: rgba(255, 255, 255, 0.1);
+                        border-radius: 3px;
+                    }
+
+                    .custom-scrollbar::-webkit-scrollbar-thumb {
+                        background: rgba(167, 139, 250, 0.3);
+                        border-radius: 3px;
+                    }
+
+                    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                        background: rgba(167, 139, 250, 0.5);
+                    }
+
+                    /* Drag animation */
+                    #dropZone.drag-active #dragOverlay {
+                        opacity: 1;
+                    }
+                </style>
+
+
+                <div
+                    class="group hover:bg-purple-500/10 transition-all duration-300 bg-white/5 p-4 sm:p-5 rounded-xl backdrop-blur-sm border border-white/10">
+                    <!-- Label with icon -->
+                    <div class="flex items-center space-x-2 mb-3">
+                        <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <label for="expiry" class="text-sm font-medium text-purple-300">
+                            Expires after:
+                        </label>
+                    </div>
+
+                    <!-- Custom select wrapper -->
+                    <div class="relative">
+                        <select name="expiry" id="expiry" required class="appearance-none w-full bg-white/10 border border-white/20 rounded-lg text-gray-200 
+                                   focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 
+                                   py-2.5 px-4 pr-10 cursor-pointer hover:bg-white/20">
+                            <optgroup label="Minutes" class="bg-gray-900">
+                                <option value="1m">1 minute</option>
+                                <option value="5m">5 minutes</option>
+                                <option value="15m">15 minutes</option>
+                                <option value="30m">30 minutes</option>
+                            </optgroup>
+                            <optgroup label="Hours" class="bg-gray-900">
+                                <option value="1h">1 hour</option>
+                                <option value="6h">6 hours</option>
+                                <option value="12h">12 hours</option>
+                                <option value="24h" selected>24 hours</option>
+                                <option value="48h">48 hours</option>
+                                <option value="72h">72 hours</option>
+                            </optgroup>
+                            <optgroup label="Days" class="bg-gray-900">
+                                <option value="7d">7 days</option>
+                            </optgroup>
+                        </select>
+
+                        <!-- Custom dropdown arrow -->
+                        <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                            <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Optional helper text -->
+                    <p class="mt-2 text-xs text-purple-300/70">
+                        Files will be automatically deleted after the selected time period.
+                    </p>
+                </div>
+
+                <style>
+                    /* Custom styles for select optgroup and options */
+                    select optgroup {
+                        font-weight: 600;
+                        color: #a78bfa;
+                        /* Purple-400 */
+                        background-color: rgb(17, 24, 39);
+                        /* Gray-900 */
+                    }
+
+                    select option {
+                        padding: 8px;
+                        color: #e2e8f0;
+                        /* Gray-200 */
+                        background-color: rgb(17, 24, 39);
+                        /* Gray-900 */
+                    }
+
+                    select option:hover {
+                        background-color: rgba(167, 139, 250, 0.1);
+                        /* Purple-400 with opacity */
+                    }
+
+                    /* Remove default select styles in modern browsers */
+                    select::-ms-expand {
+                        display: none;
+                    }
+
+                    /* Custom scrollbar for the dropdown */
+                    select::-webkit-scrollbar {
+                        width: 8px;
+                    }
+
+                    select::-webkit-scrollbar-track {
+                        background: rgba(255, 255, 255, 0.1);
+                        border-radius: 4px;
+                    }
+
+                    select::-webkit-scrollbar-thumb {
+                        background: rgba(167, 139, 250, 0.3);
+                        border-radius: 4px;
+                    }
+
+                    select::-webkit-scrollbar-thumb:hover {
+                        background: rgba(167, 139, 250, 0.5);
+                    }
+                </style>
+
+
+                <!-- Progress Bar -->
+                <div id="progressContainer" class="hidden space-y-2">
+                    <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                        <div id="progressBar"
+                            class="h-full bg-gradient-to-r from-purple-600 to-purple-700 transition-all duration-300"
+                            style="width: 0%">
+                        </div>
+                    </div>
+                    <div id="progressText" class="text-sm text-purple-300 text-center">
+                        0%
+                    </div>
+                </div>
+
+                <!-- Enhanced Upload Button -->
+                <button type="submit" id="uploadBtn" class="group relative w-full flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-medium py-4 px-6 rounded-xl transition-all duration-300 
+                hover:from-purple-700 hover:to-purple-800 
+                focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900
+                disabled:opacity-50 disabled:cursor-not-allowed
+                transform hover:-translate-y-0.5 active:translate-y-0">
+
+                    <!-- Upload icon -->
+                    <svg class="w-5 h-5 transition-transform group-hover:scale-110 group-active:scale-95"
+                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+                    </svg>
+
+                    <!-- Button text -->
+                    <span class="relative">Upload Files</span>
+
+                    <!-- Shine effect -->
+                    <div class="absolute inset-0 rounded-xl overflow-hidden">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000">
+                        </div>
+                    </div>
+                </button>
+
+            </form>
+
+            <!-- Result Container -->
+            <div id="result" class="mt-6 text-center text-purple-200"></div>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('uploadForm');
+            const fileInput = document.getElementById('file');
+            const dropZone = document.getElementById('dropZone');
+            const selectedFilesList = document.getElementById('selectedFiles');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const resultDiv = document.getElementById('result');
+
+            // Array to hold selected files
+            let selectedFiles = [];
+
+            // Handle file selection
+            fileInput.addEventListener('change', (e) => {
+                addFiles(e.target.files);
+            });
+
+            // Prevent default behaviors for drag events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // Highlight drop zone when files are dragged over
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.add('drag-active');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.remove('drag-active');
+                });
+            });
+
+            // Handle dropped files
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                addFiles(files);
+            });
+
+            // Function to add files to the selectedFiles array and update UI
+            function addFiles(files) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+
+                    // Optional: Check for duplicate files (by name and size)
+                    if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                        selectedFiles.push(file);
+                        displayFile(file, selectedFiles.length - 1);
+                    }
+                }
+                updateSelectedFilesUI();
+            }
+
+            function displayFile(file, index) {
+                const li = document.createElement('li');
+                li.dataset.index = index;
+                li.className = "flex items-center justify-between bg-white/10 p-3 rounded-lg mb-2 backdrop-blur-sm border border-purple-500/20 hover:border-purple-500/30 transition-all duration-300";
+
+                // File icon and name container
+                const fileInfoDiv = document.createElement('div');
+                fileInfoDiv.className = "flex items-center space-x-3 truncate flex-grow";
+
+                // Add file icon
+                const fileIcon = document.createElement('svg');
+                fileIcon.className = "w-5 h-5 text-purple-400 flex-shrink-0";
+                fileIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+    </svg>`;
+
+                // File name span (visible by default)
+                const fileNameSpan = document.createElement('span');
+                fileNameSpan.className = "text-gray-200 text-sm font-medium truncate";
+                fileNameSpan.textContent = file.name;
+
+                // File name input for renaming (hidden by default)
+                const fileNameInput = document.createElement('input');
+                fileNameInput.type = 'text';
+                fileNameInput.className = "hidden bg-transparent text-gray-200 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-purple-500 rounded px-2 py-1 w-full";
+                const extension = file.name.split('.').pop();
+                const baseName = file.name.substring(0, file.name.lastIndexOf('.'));
+                fileNameInput.value = baseName;
+
+                // Handle rename on blur and enter key
+                fileNameInput.addEventListener('blur', () => {
+                    handleRename(fileNameInput, file, extension, index);
+                    fileNameInput.classList.add('hidden');
+                    fileNameSpan.classList.remove('hidden');
+                });
+
+                fileNameInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        fileNameInput.blur();
+                    }
+                });
+
+                // File size
+                const fileSize = document.createElement('span');
+                fileSize.className = "text-purple-300 text-xs flex-shrink-0 ml-2";
+                fileSize.textContent = formatFileSize(file.size);
+
+                // Actions container
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = "flex items-center space-x-2 flex-shrink-0";
+
+                // Edit button
+                const editBtn = document.createElement('button');
+                editBtn.type = "button";
+                editBtn.className = "p-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 transition-colors duration-300";
+                editBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+    </svg>`;
+                editBtn.title = 'Rename file';
+                editBtn.addEventListener('click', () => {
+                    fileNameSpan.classList.add('hidden');
+                    fileNameInput.classList.remove('hidden');
+                    fileNameInput.focus();
+                });
+
+                // Remove button
+                const removeBtn = document.createElement('button');
+                removeBtn.type = "button";
+                removeBtn.className = "p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors duration-300";
+                removeBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>`;
+                removeBtn.title = 'Remove file';
+                removeBtn.addEventListener('click', () => removeFile(index));
+
+                // Append elements
+                fileInfoDiv.appendChild(fileIcon);
+                fileInfoDiv.appendChild(fileNameSpan);
+                fileInfoDiv.appendChild(fileNameInput);
+                fileInfoDiv.appendChild(fileSize);
+                actionsDiv.appendChild(editBtn);
+                actionsDiv.appendChild(removeBtn);
+                li.appendChild(fileInfoDiv);
+                li.appendChild(actionsDiv);
+                selectedFilesList.appendChild(li);
+            }
+
+            function handleRename(input, file, extension, index) {
+                const newName = input.value.trim();
+                if (newName && newName !== file.name) {
+                    // Create new file with updated name
+                    const newFile = new File([file], `${newName}.${extension}`, {
+                        type: file.type,
+                        lastModified: file.lastModified,
+                    });
+
+                    // Update the files array
+                    selectedFiles[index] = newFile;
+
+                    // Update UI
+                    updateSelectedFilesUI();
+                }
+            }
+
+            // Function to remove a file from the selectedFiles array and update UI
+            function removeFile(index) {
+                selectedFiles.splice(index, 1);
+                updateSelectedFilesUI();
+            }
+
+            // Function to update the selected files list in the UI
+            function updateSelectedFilesUI() {
+                // Clear the current list
+                selectedFilesList.innerHTML = '';
+
+                // Re-render the list
+                selectedFiles.forEach((file, index) => {
+                    displayFile(file, index);
+                });
+
+                // Update the file input's files property
+                const dataTransfer = new DataTransfer();
+                selectedFiles.forEach(file => dataTransfer.items.add(file));
+                fileInput.files = dataTransfer.files;
+            }
+
+            // Function to format file sizes
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData();
+
+                if (selectedFiles.length === 0) {
+                    showResult('Please select at least one file', 'error');
+                    return;
+                }
+
+                // Append files to FormData
+                selectedFiles.forEach((file, index) => {
+                    formData.append('files', file);
+                });
+
+                // Append expiry option
+                const expiry = document.getElementById('expiry').value;
+                formData.append('expiry', expiry);
+
+                // Disable upload button and show progress
+                uploadBtn.disabled = true;
+                progressContainer.style.display = 'block';
+                resultDiv.style.display = 'none';
+
+                // Reset progress
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+
+                const xhr = new XMLHttpRequest();
+                let startTime = Date.now();
+                let lastLoaded = 0;
+                let speedInterval;
+
+                // Create speed display element
+                const speedDisplay = document.createElement('div');
+                speedDisplay.className = "text-sm text-purple-300 text-center mt-2";
+                progressContainer.appendChild(speedDisplay);
+
+                // Update progress bar and speed
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        // Calculate percentage
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressBar.style.width = percentComplete + '%';
+                        progressText.textContent = percentComplete.toFixed(1) + '%';
+
+                        // Calculate speed
+                        const currentTime = Date.now();
+                        const elapsedTime = (currentTime - startTime) / 1000; // seconds
+                        const bytesPerSecond = e.loaded / elapsedTime;
+
+                        // Convert to appropriate unit
+                        let speedText;
+                        if (bytesPerSecond >= 1024 * 1024) {
+                            speedText = `${(bytesPerSecond / (1024 * 1024)).toFixed(2)} MB/s`;
+                        } else if (bytesPerSecond >= 1024) {
+                            speedText = `${(bytesPerSecond / 1024).toFixed(2)} KB/s`;
+                        } else {
+                            speedText = `${bytesPerSecond.toFixed(2)} B/s`;
+                        }
+
+                        // Calculate estimated time remaining
+                        const remainingBytes = e.total - e.loaded;
+                        const estimatedSeconds = remainingBytes / bytesPerSecond;
+                        let timeText;
+                        if (estimatedSeconds >= 60) {
+                            timeText = `${Math.ceil(estimatedSeconds / 60)} min remaining`;
+                        } else {
+                            timeText = `${Math.ceil(estimatedSeconds)} sec remaining`;
+                        }
+
+                        // Update speed display
+                        speedDisplay.textContent = `${speedText} - ${timeText}`;
+                    }
+                });
+
+                // Handle upload complete
+                xhr.upload.addEventListener('loadend', () => {
+                    speedDisplay.remove(); // Remove speed display when upload is complete
+                });
+
+                // Handle response
+                xhr.addEventListener('load', () => {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        showResult(response.downloadLink, 'success');
+                        console.log(response.downloadLink);
+                    } else {
+                        const response = JSON.parse(xhr.responseText);
+                        showResult(response.error || 'Error uploading files', 'error');
+                    }
+                    resetUploadState();
+                });
+
+                // Handle errors
+                xhr.addEventListener('error', () => {
+                    showResult('Network error occurred while uploading files', 'error');
+                    resetUploadState();
+                });
+
+                // Send the request
+                xhr.open('POST', '/upload', true);
+                xhr.send(formData);
+            });
+
+            // Update the resetUploadState function to handle speed display cleanup
+            function resetUploadState() {
+                uploadBtn.disabled = false;
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                fileInput.value = '';
+                selectedFiles = [];
+                selectedFilesList.innerHTML = '';
+
+                // Remove speed display if it exists
+                const speedDisplay = progressContainer.querySelector('div:last-child');
+                if (speedDisplay) {
+                    speedDisplay.remove();
+                }
+            }
+
+
+            function showResult(message, type) {
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = '';
+
+                if (type === 'success') {
+                    resultDiv.innerHTML = `
+            <div class="transform transition-all duration-300 ">
+                <div class="bg-purple-500/10 border border-purple-500/30 rounded-xl p-6 backdrop-blur-sm shadow-lg shadow-purple-500/10">
+                    <div class="flex flex-col items-center space-y-4">
+                        <!-- Success Animation -->
+                        <div class="relative">
+                            <svg class="w-12 h-12 text-green-400 animate-[success_0.6s_ease-in-out]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div class="absolute inset-0 bg-green-400/20 rounded-full animate-ping"></div>
+                        </div>
+
+                        <!-- Success Message -->
+                        <div class="text-center space-y-1">
+                            <h3 class="text-xl sm:text-2xl font-semibold text-white">Files uploaded successfully!</h3>
+                            <p class="text-purple-300 text-sm">Your files are ready to share</p>
+                        </div>
+
+                        <!-- Link Container -->
+                        <div class="w-full max-w-md">
+                            <div class="group flex items-center justify-between bg-white/10 p-3 rounded-lg hover:bg-white/20 transition-all duration-300">
+                                <div class="flex items-center space-x-3 min-w-0">
+                                    <svg class="w-5 h-5 text-purple-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                    </svg>
+                                    <span class="text-purple-200 text-sm truncate">${message}</span>
+                                </div>
+                                <div class="flex items-center space-x-2 flex-shrink-0">
+                                    <button onclick="navigator.clipboard.writeText('${message}')" 
+                                            class="p-2 hover:bg-purple-500/20 rounded-lg transition-colors duration-300" 
+                                            title="Copy link">
+                                        <svg class="w-4 h-4 text-purple-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                    </button>
+                                    <a href="${message}" target="_blank" 
+                                       class="flex items-center space-x-1 px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white text-sm rounded-lg transition-colors duration-300">
+                                        <span>Open</span>
+                                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+                } else {
+                    resultDiv.innerHTML = `
+            <div class="transform transition-all duration-300">
+                <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-6 backdrop-blur-sm shadow-lg shadow-red-500/10">
+                    <div class="flex items-center space-x-3">
+                        <div class="relative flex-shrink-0">
+                            <svg class="w-6 h-6 text-red-400 animate-[shake_0.5s_ease-in-out]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-red-200 font-medium">${message}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+                }
+
+                resultDiv.style.display = 'block';
+            }
+
+
+
+            // Function to reset the upload form state
+            function resetUploadState() {
+                uploadBtn.disabled = false;
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                fileInput.value = '';
+                selectedFiles = [];
+                selectedFilesList.innerHTML = '';
+            }
+        });
+    </script>
+
+
+</body>
+
+</html>
