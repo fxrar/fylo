@@ -53,5 +53,3 @@ npm start
 - Thanks to all contributors who have helped shape Fylo
 - Inspired by modern file sharing solutions
 - Built with ❤️ for the open-source community
-
-This README aims to answer common questions about installing and using the project.
