@@ -53,3 +53,7 @@ npm start
 - Thanks to all contributors who have helped shape Fylo
 - Inspired by modern file sharing solutions
 - Built with ❤️ for the open-source community
+
+## 👀 Want to see the preview?
+
+Here is the link: [fylo.cc](http://fylo.cc)
