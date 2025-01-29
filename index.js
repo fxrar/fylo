@@ -1,12 +1,13 @@
-// index.js
+// index.js - Main file, will add more files for better reading
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
 const fs = require('fs');
 const mime = require('mime-types');
+
 const schedule = require('node-schedule');
-const archiver = require('archiver'); // Add this package for zip functionality
+const archiver = require('archiver'); 
 
 const app = express();
 const port = 3657;
@@ -31,22 +32,19 @@ const storage = multer.diskStorage({
     }
 });
 
-// Update file size limit to 10MB per file
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 1000 * 1024 * 1024 // 10MB limit per file
+        fileSize: 1000 * 1024 * 1024 
     },
     fileFilter: (req, file, cb) => {
-        // Optional: Add file type validation if needed
+     
         cb(null, true);
     }
 });
 
-// Use a Map to store file information
 const files = new Map();
 
-// Determine if a file type is previewable
 function isPreviewable(mimeType) {
     const previewableTypes = [
         'image/',
@@ -58,19 +56,16 @@ function isPreviewable(mimeType) {
     return previewableTypes.some(type => mimeType.startsWith(type));
 }
 
-// Schedule file deletion after expiry
 function scheduleFileDeletion(filename, expiryTime) {
     const job = schedule.scheduleJob(expiryTime, function () {
         const filePath = path.join(__dirname, 'uploads', filename);
 
-        // Delete file from storage
         fs.unlink(filePath, (err) => {
             if (err) {
                 console.error(`Error deleting file ${filename}:`, err);
                 return;
             }
 
-            // Remove file info from Map
             files.delete(filename);
             console.log(`File ${filename} deleted successfully`);
         });
@@ -79,13 +74,12 @@ function scheduleFileDeletion(filename, expiryTime) {
     return job;
 }
 
-// Calculate expiry time based on duration string (e.g., '10m', '2h', '3d')
 function calculateExpiryTime(duration) {
     const expiryTime = new Date();
     const match = duration.match(/^(\d+)([mhd])$/);
 
     if (!match) {
-        expiryTime.setHours(expiryTime.getHours() + 24); // Default to 24 hours
+        expiryTime.setHours(expiryTime.getHours() + 24); 
         return expiryTime;
     }
 
@@ -96,50 +90,43 @@ function calculateExpiryTime(duration) {
         case 'm': // minutes
             expiryTime.setMinutes(expiryTime.getMinutes() + value);
             break;
-        case 'h': // hours
+        case 'h': // hourss
             expiryTime.setHours(expiryTime.getHours() + value);
             break;
         case 'd': // days
             expiryTime.setDate(expiryTime.getDate() + value);
             break;
         default:
-            expiryTime.setHours(expiryTime.getHours() + 24); // Default to 24 hours
+            expiryTime.setHours(expiryTime.getHours() + 24); 
     }
 
     return expiryTime;
 }
 
 
-// Helper function to get file icon based on mime type
 app.locals.getFileIcon = function (mimeType, originalName) {
-    // Get file extension
     const ext = originalName.split('.').pop().toLowerCase();
 
-    // Common file type mappings
+ 
     const iconMap = {
-        // Images
         'image/': `<svg class="w-6 h-6 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>`,
 
-        // Videos
         'video/': `<svg class="w-6 h-6 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg>`,
 
-        // Audio
         'audio/': `<svg class="w-6 h-6 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
         </svg>`,
 
-        // Documents
         'application/pdf': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
   <path d="M4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H4zm0 1h8a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"/>
   <path d="M4.603 12.087a.8.8 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.102.198-.307.526-.568.897-.787a7.7 7.7 0 0 1 1.482-.645 20 20 0 0 0 1.062-2.227 7.3 7.3 0 0 1-.43-1.295c-.086-.4-.119-.796-.046-1.136.075-.354.274-.672.65-.823.192-.077.4-.12.602-.077a.7.7 0 0 1 .477.365c.088.164.12.356.127.538.007.187-.012.395-.047.614-.084.51-.27 1.134-.52 1.794a11 11 0 0 0 .98 1.686 5.8 5.8 0 0 1 1.334.05c.364.065.734.195.96.465.12.144.193.32.2.518.007.192-.047.382-.138.563a1.04 1.04 0 0 1-.354.416.86.86 0 0 1-.51.138c-.331-.014-.654-.196-.933-.417a5.7 5.7 0 0 1-.911-.95 11.6 11.6 0 0 0-1.997.406 11.3 11.3 0 0 1-1.021 1.51c-.29.35-.608.655-.926.787a.8.8 0 0 1-.58.029"/>
 </svg>
 `,
 
-        // Archives
         'application/zip': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 12v4m0 0l-2-2m2 2l2-2"/>
@@ -151,9 +138,7 @@ app.locals.getFileIcon = function (mimeType, originalName) {
         </svg>`
     };
 
-    // Extension-specific icons with expanded support
     const extMap = {
-        // Documents
         'doc': 'text-blue-500',
         'docx': 'text-blue-500',
         'xls': 'text-green-500',
@@ -165,14 +150,12 @@ app.locals.getFileIcon = function (mimeType, originalName) {
         'rtf': 'text-blue-400',
         'odt': 'text-blue-600',
 
-        // Archives
         'zip': 'text-yellow-500',
         'rar': 'text-yellow-500',
         '7z': 'text-yellow-500',
         'tar': 'text-yellow-600',
         'gz': 'text-yellow-600',
 
-        // Code files
         'json': 'text-yellow-400',
         'xml': 'text-yellow-600',
         'html': 'text-orange-600',
@@ -192,7 +175,6 @@ app.locals.getFileIcon = function (mimeType, originalName) {
         'swift': 'text-orange-500',
         'go': 'text-blue-400',
 
-        // Images
         'jpg': 'text-blue-400',
         'jpeg': 'text-blue-400',
         'png': 'text-blue-500',
@@ -201,7 +183,6 @@ app.locals.getFileIcon = function (mimeType, originalName) {
         'webp': 'text-blue-400',
         'ico': 'text-blue-300',
 
-        // Media
         'mp3': 'text-green-500',
         'wav': 'text-green-400',
         'ogg': 'text-green-600',
@@ -210,42 +191,35 @@ app.locals.getFileIcon = function (mimeType, originalName) {
         'mov': 'text-red-600',
         'wmv': 'text-red-500',
 
-        // Font files
         'ttf': 'text-gray-600',
         'otf': 'text-gray-600',
         'woff': 'text-gray-500',
         'woff2': 'text-gray-500'
     };
 
-    // Check for specific mime type matches
     for (const type in iconMap) {
         if (mimeType.startsWith(type)) {
             return iconMap[type];
         }
     }
 
-    // Check for extension-specific icons
     if (extMap[ext]) {
         return `<svg class="w-6 h-6 ${extMap[ext]}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>`;
     }
 
-    // Default icon
     return `<svg class="w-6 h-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
     </svg>`;
 };
 
-// Render the upload page
 app.get('/', (req, res) => {
     res.render('index');
 });
 
-// Store groups of files instead of individual files
 const fileGroups = new Map();
 
-// Handle multiple file uploads
 app.post('/upload', upload.array('files'), (req, res) => {
     try {
         if (!req.files || req.files.length === 0) {
@@ -255,7 +229,6 @@ app.post('/upload', upload.array('files'), (req, res) => {
         const duration = req.body.expiry || '24h';
         const expiryTime = calculateExpiryTime(duration);
 
-        // Generate a unique group ID for this batch of files
         const groupId = Date.now().toString(36) + Math.random().toString(36).substr(2);
         const filesInfo = [];
 
@@ -275,23 +248,19 @@ app.post('/upload', upload.array('files'), (req, res) => {
 
             filesInfo.push(fileInfo);
 
-            // Schedule individual file deletion
             scheduleFileDeletion(file.filename, expiryTime);
         });
 
-        // Store the group information
         fileGroups.set(groupId, {
             files: filesInfo,
             expiryTime: expiryTime,
             totalDownloads: 0
         });
 
-        // Schedule group deletion
         setTimeout(() => {
             fileGroups.delete(groupId);
         }, expiryTime - new Date());
 
-        // Return single group download link
         const downloadLink = `${req.protocol}://${req.get('host')}/files/${groupId}`;
         res.json({
             message: 'Files uploaded successfully',
@@ -304,7 +273,6 @@ app.post('/upload', upload.array('files'), (req, res) => {
     }
 });
 
-// Render the download page for file group
 app.get('/files/:groupId', (req, res) => {
     const groupInfo = fileGroups.get(req.params.groupId);
 
@@ -312,11 +280,9 @@ app.get('/files/:groupId', (req, res) => {
         return res.status(404).render('error', { message: 'Files not found or have expired' });
     }
 
-    // Calculate time remaining
     const timeRemaining = groupInfo.expiryTime - new Date();
     const timeRemainingStr = getTimeRemainingString(timeRemaining);
 
-    // Add readable size for each file
     const filesWithSize = groupInfo.files.map(file => ({
         ...file,
         readableSize: formatFileSize(file.size)
@@ -330,7 +296,6 @@ app.get('/files/:groupId', (req, res) => {
     });
 });
 
-// Handle single file download
 app.get('/download/:groupId/:filename', (req, res) => {
     const groupInfo = fileGroups.get(req.params.groupId);
 
@@ -353,7 +318,6 @@ app.get('/download/:groupId/:filename', (req, res) => {
     res.download(filePath, fileInfo.originalName);
 });
 
-// Handle download all files as zip
 app.get('/download-all/:groupId', (req, res) => {
     const groupInfo = fileGroups.get(req.params.groupId);
 
@@ -362,14 +326,12 @@ app.get('/download-all/:groupId', (req, res) => {
     }
 
     const archive = archiver('zip', {
-        zlib: { level: 9 } // Maximum compression
+        zlib: { level: 9 } 
     });
 
-    // Set the headers
     res.attachment('files.zip');
     archive.pipe(res);
 
-    // Add each file to the archive
     groupInfo.files.forEach(fileInfo => {
         const filePath = path.join(__dirname, 'uploads', fileInfo.filename);
         if (fs.existsSync(filePath)) {
@@ -397,13 +359,11 @@ app.get('/preview/:groupId/:filename', (req, res) => {
     res.sendFile(filePath);
 });
 
-// Utility function to format file size
 function formatFileSize(size) {
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(2)} KB`;
     return `${(size / (1024 * 1024)).toFixed(2)} MB`;
 }
-// Helper function to format time remaining
 function getTimeRemainingString(timeRemaining) {
     const minutes = Math.floor(timeRemaining / (1000 * 60));
     const hours = Math.floor(minutes / 60);
@@ -423,7 +383,6 @@ function getTimeRemainingString(timeRemaining) {
 
 
 
-// Start the server
 app.listen(port, () => {
     console.log(`File sharing app listening at http://localhost:${port}`);
 });
