@@ -5,6 +5,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Download Files</title>
+    
+    <!-- Open Graph Meta Tags for Social Sharing -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Download Files - <%= files.length === 1 ? files[0].originalName : 'Multiple Files' %>">
+    <meta property="og:description" content="<%= files.length === 1 ? `Download ${files[0].originalName} (${files[0].readableSize})` : `Download ${totalFiles} files` %> - Time remaining: <%= timeRemaining %>">
+    <% if (files.length === 1 && files[0].isPreviewable && files[0].mimeType.startsWith('image/')) { %>
+    <meta property="og:image" content="<%= `https://fylo.cc/preview/${groupId}/${files[0].filename}` %>">
+    <% } else { %>
+    <meta property="og:image" content="<%= `https://fylo.cc/images/file-preview.png` %>">
+    <% } %>
+    <meta property="og:url" content="<%= `https://fylo.cc/download-page/${groupId}` %>">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Download Files - <%= files.length === 1 ? files[0].originalName : 'Multiple Files' %>">
+    <!-- <meta name="twitter:description" content="<%= files.length === 1 ? `Download ${files[0].originalName} (${files[0].readableSize})` : `Download ${totalFiles} files` %> - Time remaining: <%= timeRemaining %>"> -->
+    <% if (files.length === 1 && files[0].isPreviewable && files[0].mimeType.startsWith('image/')) { %>
+    <meta name="twitter:image" content="<%= `https://fylo.cc/preview/${groupId}/${files[0].filename}` %>">
+    <% } else { %>
+    <meta name="twitter:image" content="<%= `https://fylo.cc/images/file-preview.png` %>">
+    <% } %>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
