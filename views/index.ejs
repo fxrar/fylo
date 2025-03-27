@@ -19,14 +19,65 @@
                 width: var(--progress);
             }
         }
-    </style>
 
-    <style>
+        /* Animation for drag overlay */
+        @keyframes pulse {
+            0% {
+                background-color: #7e22ce; /* Purple-900 - deep purple */
+            }
+            50% {
+                background-color: #7e22ce; /* Purple-700 - slightly lighter */
+            }
+            100% {
+                background-color: #7e22ce; /* Purple-900 - deep purple */
+            }
+        }
 
+        /* Global drag overlay */
+        #globalDragOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #7e22ce; /* Solid purple-900 */
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        #globalDragOverlay.active {
+            opacity: 1;
+            animation: pulse 2s infinite;
+        }
+
+        #globalDragOverlay .message {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px dashed rgba(167, 139, 250, 0.5);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 400px;
+            text-align: center;
+        }
     </style>
 </head>
 
 <body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen font-['Inter']">
+    <!-- Global drag overlay -->
+    <div id="globalDragOverlay">
+        <div class="message bg-purple-900/30 backdrop-blur-sm border-2 border-purple-400">
+            <svg class="w-16 h-16 mx-auto mb-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+            </svg>
+            <h3 class="text-xl font-semibold text-white mb-2">Drop your files anywhere</h3>
+            <p class="text-purple-200">Release to add them to your upload</p>
+        </div>
+    </div>
+
     <div class="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
         <!-- Glass-morphism inspired main container -->
         <div class="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl p-6 md:p-8 space-y-8 border border-white/10">
@@ -91,6 +142,15 @@
                                             </svg>
                                             Supports all file types
                                         </span>
+                                        <span class="hidden sm:inline">•</span>
+                                        <span class="flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                            </svg>
+                                            Maximum 10 files at once
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -101,6 +161,16 @@
 
                     <!-- Selected files list with enhanced styling -->
                     <ul id="selectedFiles" class="mt-4 space-y-2 max-h-60 overflow-y-auto custom-scrollbar"></ul>
+                    
+                    <!-- File limit warning -->
+                    <div id="fileLimitWarning" class="hidden mt-4 p-3 bg-amber-500/20 border border-amber-500/40 rounded-lg">
+                        <div class="flex items-center text-amber-300">
+                            <svg class="w-5 h-5 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            <span>You can only upload a maximum of 10 files at once. Please remove some files before adding more.</span>
+                        </div>
+                    </div>
                 </div>
 
                 <style>
@@ -284,12 +354,17 @@
             const form = document.getElementById('uploadForm');
             const fileInput = document.getElementById('file');
             const dropZone = document.getElementById('dropZone');
+            const globalDragOverlay = document.getElementById('globalDragOverlay');
             const selectedFilesList = document.getElementById('selectedFiles');
             const uploadBtn = document.getElementById('uploadBtn');
             const progressContainer = document.getElementById('progressContainer');
             const progressBar = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
             const resultDiv = document.getElementById('result');
+            const fileLimitWarning = document.getElementById('fileLimitWarning');
+
+            // Maximum number of files
+            const MAX_FILES = 10;
 
             // Array to hold selected files
             let selectedFiles = [];
@@ -299,7 +374,12 @@
                 addFiles(e.target.files);
             });
 
-            // Prevent default behaviors for drag events
+            // Prevent default behaviors for drag events on the document
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                document.addEventListener(eventName, preventDefaults, false);
+            });
+
+            // Also prevent default behaviors for the dropZone
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 dropZone.addEventListener(eventName, preventDefaults, false);
             });
@@ -307,6 +387,34 @@
             function preventDefaults(e) {
                 e.preventDefault();
                 e.stopPropagation();
+            }
+
+            // Handle document-level drag events
+            document.addEventListener('dragenter', showGlobalOverlay);
+            document.addEventListener('dragover', showGlobalOverlay);
+            
+            document.addEventListener('dragleave', (e) => {
+                // Check if the mouse has left the document
+                if (!e.relatedTarget || e.relatedTarget.nodeName === 'HTML') {
+                    hideGlobalOverlay();
+                }
+            });
+            
+            document.addEventListener('drop', (e) => {
+                hideGlobalOverlay();
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                addFiles(files);
+            });
+
+            // Show global overlay during drag
+            function showGlobalOverlay() {
+                globalDragOverlay.classList.add('active');
+            }
+
+            // Hide global overlay when drag ends
+            function hideGlobalOverlay() {
+                globalDragOverlay.classList.remove('active');
             }
 
             // Highlight drop zone when files are dragged over
@@ -322,7 +430,7 @@
                 });
             });
 
-            // Handle dropped files
+            // Handle dropped files on dropZone
             dropZone.addEventListener('drop', (e) => {
                 const dt = e.dataTransfer;
                 const files = dt.files;
@@ -331,16 +439,50 @@
 
             // Function to add files to the selectedFiles array and update UI
             function addFiles(files) {
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-
-                    // Optional: Check for duplicate files (by name and size)
-                    if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
-                        selectedFiles.push(file);
-                        displayFile(file, selectedFiles.length - 1);
+                // Check if adding these files would exceed the limit
+                if (selectedFiles.length + files.length > MAX_FILES) {
+                    showFileLimitWarning();
+                    // Only add files up to the limit
+                    const remainingSlots = MAX_FILES - selectedFiles.length;
+                    if (remainingSlots <= 0) return;
+                    
+                    // Create a new array with only the files that fit within the limit
+                    const filesToAdd = Array.from(files).slice(0, remainingSlots);
+                    
+                    for (let i = 0; i < filesToAdd.length; i++) {
+                        const file = filesToAdd[i];
+                        // Check for duplicate files (by name and size)
+                        if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                            selectedFiles.push(file);
+                            displayFile(file, selectedFiles.length - 1);
+                        }
                     }
+                } else {
+                    // Add all files if within limit
+                    for (let i = 0; i < files.length; i++) {
+                        const file = files[i];
+                        // Check for duplicate files (by name and size)
+                        if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                            selectedFiles.push(file);
+                            displayFile(file, selectedFiles.length - 1);
+                        }
+                    }
+                    hideFileLimitWarning();
                 }
                 updateSelectedFilesUI();
+            }
+            
+            function showFileLimitWarning() {
+                fileLimitWarning.classList.remove('hidden');
+                // Add a shake animation
+                fileLimitWarning.classList.add('animate-[shake_0.5s_ease-in-out]');
+                setTimeout(() => {
+                    fileLimitWarning.classList.remove('animate-[shake_0.5s_ease-in-out]');
+                }, 500);
+            }
+            
+            function hideFileLimitWarning() {
+                fileLimitWarning.classList.add('hidden');
             }
 
             function displayFile(file, index) {
@@ -451,6 +593,7 @@
             function removeFile(index) {
                 selectedFiles.splice(index, 1);
                 updateSelectedFilesUI();
+                hideFileLimitWarning(); // Hide warning when files are removed
             }
 
             // Function to update the selected files list in the UI
@@ -591,6 +734,7 @@
                 fileInput.value = '';
                 selectedFiles = [];
                 selectedFilesList.innerHTML = '';
+                hideFileLimitWarning();
 
                 // Remove speed display if it exists
                 const speedDisplay = progressContainer.querySelector('div:last-child');
@@ -673,23 +817,26 @@
 
                 resultDiv.style.display = 'block';
             }
-
-
-
-            // Function to reset the upload form state
-            function resetUploadState() {
-                uploadBtn.disabled = false;
-                progressContainer.style.display = 'none';
-                progressBar.style.width = '0%';
-                progressText.textContent = '0%';
-                fileInput.value = '';
-                selectedFiles = [];
-                selectedFilesList.innerHTML = '';
-            }
         });
+
+        // Add necessary animation keyframes
+        document.head.insertAdjacentHTML('beforeend', `
+        <style>
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                50% { transform: translateX(5px); }
+                75% { transform: translateX(-5px); }
+            }
+            
+            @keyframes success {
+                0% { transform: scale(0.5); opacity: 0; }
+                50% { transform: scale(1.2); opacity: 1; }
+                100% { transform: scale(1); opacity: 1; }
+            }
+        </style>
+        `);
     </script>
-
-
 </body>
 
 </html>
